@@ -1,0 +1,16 @@
+package: naju_group_accounts
+version: '0.0.1'
+author: NAJU Sachsen
+supportpage: https://github.com/NAJU-Sachsen/rex-group-accounts
+requires:
+  redaxo: '^5.10'
+  php: '>=7.1'
+page:
+  title: 'Ortsgruppen-Benutzer'
+  icon: rex-icon fa-home
+  perm: admin
+  subpages:
+    groups:
+      title: 'Ortsgruppen'
+    accounts:
+      title: 'Benutzer'
