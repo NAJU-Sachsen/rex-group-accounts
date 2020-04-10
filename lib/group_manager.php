@@ -15,14 +15,14 @@ class naju_local_group_manager
                 set group_name = :name, group_logo = :logo
                 where group_id = :id
                 limit 1;
-            EOSQL;
+EOSQL;
             $sql = rex_sql::factory()->setQuery($update_query, ['id' => $id, 'name' => $group_name, 'logo' => $logo]);
         } else {
             $insert_query = <<<EOSQL
                 insert into
                     naju_local_group (group_name, group_logo)
                 values (:name, :logo)
-            EOSQL;
+EOSQL;
             $sql = rex_sql::factory()->setQuery($insert_query, ['name' => $group_name, 'logo' => $logo]);
         }
 
