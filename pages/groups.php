@@ -14,7 +14,11 @@ $delete_error = false;
 if (in_array($func, $funcs)) {
     switch ($func) {
         case 'create_update':
-            $create_update_error = naju_local_group_manager::createOrUpdate(rex_post('group_name'), rex_post('group_id', 'int', null), rex_post('group_logo', 'string', null));
+            $name = rex_post('group_name');
+            $id = rex_post('group_id', 'int', null);
+            $logo = rex_post('group_logo', 'string', null);
+            $link = rex_post('group_link', 'int', null);
+            $create_update_error = naju_local_group_manager::createOrUpdate($name, $id, $logo, $link);
             break;
         case 'delete':
             $delete_error = naju_local_group_manager::delete(rex_get('group_id'));
@@ -30,7 +34,7 @@ if ($create_update_error) {
     $msg .= '<p class="alert alert-danger">Ortsgruppe konnte nicht gelöscht werden</p>';
 }
 
-$local_groups = rex_sql::factory()->setQuery('select group_id, group_name, group_logo from naju_local_group')->getArray();
+$local_groups = rex_sql::factory()->setQuery('select group_id, group_name, group_logo, group_link from naju_local_group')->getArray();
 $local_group_opts = '';
 
 $group_table = <<<EOHTML
@@ -40,6 +44,7 @@ $group_table = <<<EOHTML
                 <th>ID</th>
                 <th>Name</th>
                 <th>Logo</th>
+                <th>Artikel</th>
                 <th>Anpassen</th>
             </tr>
         </thead>
@@ -48,9 +53,21 @@ EOHTML;
 
 foreach ($local_groups as $group) {
 
+    $group_id = htmlspecialchars($group['group_id']);
+    $group_name = htmlspecialchars($group['group_name']);
+    $group_logo = htmlspecialchars($group['group_logo']);
+    $group_link = htmlspecialchars($group['group_link']);
+
     // generate row in the local groups table
-    $group_table .= '<tr><td>' . htmlspecialchars($group['group_id']) . '</td><td>' . htmlspecialchars($group['group_name']) . '</td>';
-    $group_table .= '<td><code>' . htmlspecialchars($group['group_logo']) . '</code></td>';
+    $group_table .= '<tr id="local-group-' . $group_id . '"';  // closing tag on next line
+    $group_table .= ' data-group-name="' . $group_name . '" data-group-logo="' . $group_logo . '" data-group-link="' . $group_link . '">';
+    $group_table .= '<td>' . $group_id . '</td><td>' . $group_name . '</td>';
+    $group_table .= '<td><code>' . $group_logo . '</code></td>';
+    if ($group['group_link']) {
+        $group_table .= '<td><a href="' . rex_getUrl($group['group_link']) . '">' . rex_getUrl($group['group_link']) . '</a></td>';
+    } else {
+        $group_table .= '<td>---</td>';
+    }
 
     $group_table .= '
         <td>
@@ -86,12 +103,38 @@ $form = <<<EOHTML
             <input type="text" name="group_logo" placeholder="Dateiname (Standard: naju-logo.png)" id="group-logo" class="form-control">
         </div>
         <div class="form-group">
+            <label for="group-link">ID des Gruppenartikels (optional):</label>
+            <input type="number" name="group_link" placeholder="ID des Artikels" id="group-link" class="form-control">
+        </div>
+        <div class="form-group">
             <button type="submit" class="btn btn-primary">Erstellen/aktualisieren</button>
         </div>
     </form>
 EOHTML;
 
-$content = $msg . $group_table . '<hr><h3 style="margin: 15px;">Neu oder aktualisieren</h3>' . $form;
+$form_init_script = <<<EOJS
+    <script type="text/javascript">
+        const groupSelect = document.getElementById("group-id");
+        const groupNameEdit = document.getElementById("group-name");
+        const groupLogoEdit = document.getElementById("group-logo");
+        const groupLinkEdit = document.getElementById("group-link");
+        groupSelect.addEventListener("change", (ev) => {
+            const groupId = ev.target.selectedOptions[0].value;
+            if (groupId == -1) {
+                groupNameEdit.value = "";
+                groupLogoEdit.value = "";
+                groupLinkEdit.value = "";
+            } else {
+                const selectedGroup = document.getElementById("local-group-" + groupId);
+                groupNameEdit.value = selectedGroup.dataset.groupName;
+                groupLogoEdit.value = selectedGroup.dataset.groupLogo;
+                groupLinkEdit.value = selectedGroup.dataset.groupLink;
+            }
+        });
+    </script>
+EOJS;
+
+$content = $msg . $group_table . '<hr><h3 style="margin: 15px;">Neu oder aktualisieren</h3>' . $form . $form_init_script;
 
 $fragment->setVar('content', $content, false);
 echo $fragment->parse('core/page/section.php');
