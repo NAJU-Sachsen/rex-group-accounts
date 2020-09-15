@@ -3,7 +3,9 @@ create table if not exists naju_local_group (
 	group_id int(10) unsigned not null auto_increment,
 	group_name varchar(75) not null,
 	group_logo varchar(50) default null,
-	primary key(group_id)
+	group_link int(10) unsigned default null,
+	primary key(group_id),
+	foreign key fk_local_group_article (group_link) references rex_article(id)
 );
 
 create table if not exists naju_group_account (
