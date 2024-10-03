@@ -18,7 +18,8 @@ if (in_array($func, $funcs)) {
             $id = rex_post('group_id', 'int', null);
             $logo = rex_post('group_logo', 'string', null);
             $link = rex_post('group_link', 'int', null);
-            $create_update_error = naju_local_group_manager::createOrUpdate($name, $id, $logo, $link);
+            $internal = rex_post('group_internal', 'int', 0);
+            $create_update_error = naju_local_group_manager::createOrUpdate($name, $id, $logo, $link, $internal);
             break;
         case 'delete':
             $delete_error = naju_local_group_manager::delete(rex_get('group_id'));
@@ -64,7 +65,7 @@ foreach ($local_groups as $group) {
     $group_table .= ' data-group-name="' . $group_name . '" data-group-logo="' . $group_logo . '" data-group-link="' . $group_link . '" data-group-internal="' . $group_internal .'">';
 
 
-    $internal_icon = $group_internal ? ' <i class="fa fa-lock"></i>' : '';
+    $internal_icon = $group_internal ? ' <span data-toggle="tooltip" title="Gruppe ist intern"><i class="fa fa-lock"></i></span>' : '';
     $group_table .= '<td>' . $group_id . '</td><td>' . $group_name . $internal_icon . '</td>';
     $group_table .= '<td><code>' . $group_logo . '</code></td>';
     if ($group['group_link']) {
@@ -111,10 +112,11 @@ $form = <<<EOHTML
             <input type="number" name="group_link" placeholder="ID des Artikels" id="group-link" class="form-control">
         </div>
         <div class="form-group">
-            <label>Interne Gruppe:</label>
             <input type="hidden" name="group_internal" value="0">
-            <input type="checkbox" name="group_internal" value="1" id="group-internal" class="form-control">
-            <label for="group-internal">Gruppe ist intern</label>
+            <div class="form-check">
+                <input type="checkbox" name="group_internal" value="1" id="group-internal" class="form-check-input">
+                <label for="group-internal" class="form-check-label">Gruppe ist intern</label>
+            </div>
             <small class="form-text text-muted">
                 Interne Gruppen werden nicht in Veranstaltungs-bezogenen Auswahlmenüs (z.B. im Kalender) angezeigt, können aber Büros, etc. besitzen.
             </small>
@@ -143,7 +145,7 @@ $form_init_script = <<<EOJS
                 groupNameEdit.value = selectedGroup.dataset.groupName;
                 groupLogoEdit.value = selectedGroup.dataset.groupLogo;
                 groupLinkEdit.value = selectedGroup.dataset.groupLink;
-                groupInternalEdit.checked = selectedGroup.dataset.groupInternal;
+                groupInternalEdit.checked = selectedGroup.dataset.groupInternal == "1";
             }
         });
     </script>
