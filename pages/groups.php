@@ -34,7 +34,7 @@ if ($create_update_error) {
     $msg .= '<p class="alert alert-danger">Ortsgruppe konnte nicht gelöscht werden</p>';
 }
 
-$local_groups = rex_sql::factory()->setQuery('select group_id, group_name, group_logo, group_link from naju_local_group')->getArray();
+$local_groups = rex_sql::factory()->setQuery('select group_id, group_name, group_logo, group_link, group_internal from naju_local_group')->getArray();
 $local_group_opts = '';
 
 $group_table = <<<EOHTML
@@ -57,11 +57,15 @@ foreach ($local_groups as $group) {
     $group_name = htmlspecialchars($group['group_name']);
     $group_logo = htmlspecialchars($group['group_logo']);
     $group_link = htmlspecialchars($group['group_link']);
+    $group_internal = $group['group_internal'];
 
     // generate row in the local groups table
     $group_table .= '<tr id="local-group-' . $group_id . '"';  // closing tag on next line
-    $group_table .= ' data-group-name="' . $group_name . '" data-group-logo="' . $group_logo . '" data-group-link="' . $group_link . '">';
-    $group_table .= '<td>' . $group_id . '</td><td>' . $group_name . '</td>';
+    $group_table .= ' data-group-name="' . $group_name . '" data-group-logo="' . $group_logo . '" data-group-link="' . $group_link . '" data-group-internal="' . $group_internal .'">';
+
+
+    $internal_icon = $group_internal ? ' <i class="fa fa-lock"></i>' : '';
+    $group_table .= '<td>' . $group_id . '</td><td>' . $group_name . $internal_icon . '</td>';
     $group_table .= '<td><code>' . $group_logo . '</code></td>';
     if ($group['group_link']) {
         $group_table .= '<td><a href="' . rex_getUrl($group['group_link']) . '">' . rex_getUrl($group['group_link']) . '</a></td>';
@@ -107,6 +111,15 @@ $form = <<<EOHTML
             <input type="number" name="group_link" placeholder="ID des Artikels" id="group-link" class="form-control">
         </div>
         <div class="form-group">
+            <label>Interne Gruppe:</label>
+            <input type="hidden" name="group_internal" value="0">
+            <input type="checkbox" name="group_internal" value="1" id="group-internal" class="form-control">
+            <label for="group-internal">Gruppe ist intern</label>
+            <small class="form-text text-muted">
+                Interne Gruppen werden nicht in Veranstaltungs-bezogenen Auswahlmenüs (z.B. im Kalender) angezeigt, können aber Büros, etc. besitzen.
+            </small>
+        </div>
+        <div class="form-group">
             <button type="submit" class="btn btn-primary">Erstellen/aktualisieren</button>
         </div>
     </form>
@@ -118,6 +131,7 @@ $form_init_script = <<<EOJS
         const groupNameEdit = document.getElementById("group-name");
         const groupLogoEdit = document.getElementById("group-logo");
         const groupLinkEdit = document.getElementById("group-link");
+        const groupInternalEdit = document.getElementById("group-internal");
         groupSelect.addEventListener("change", (ev) => {
             const groupId = ev.target.selectedOptions[0].value;
             if (groupId == -1) {
@@ -129,6 +143,7 @@ $form_init_script = <<<EOJS
                 groupNameEdit.value = selectedGroup.dataset.groupName;
                 groupLogoEdit.value = selectedGroup.dataset.groupLogo;
                 groupLinkEdit.value = selectedGroup.dataset.groupLink;
+                groupInternalEdit.checked = selectedGroup.dataset.groupInternal;
             }
         });
     </script>

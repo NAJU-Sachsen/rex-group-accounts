@@ -4,6 +4,7 @@ create table if not exists naju_local_group (
 	group_name varchar(75) not null,
 	group_logo varchar(50) default null,
 	group_link int(10) unsigned default null,
+	group_internal tinyint(1) unsigned not null default 0,
 	primary key(group_id),
 	foreign key fk_local_group_article (group_link) references rex_article(id)
 );
