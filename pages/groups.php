@@ -17,7 +17,7 @@ if (in_array($func, $funcs)) {
             $name = rex_post('group_name');
             $id = rex_post('group_id', 'int', null);
             $logo = rex_post('group_logo', 'string', null);
-            $link = rex_post('group_link', 'int', null);
+            $link = rex_post('group_link', 'int', null) ?: null;
             $internal = rex_post('group_internal', 'int', 0);
             $create_update_error = naju_local_group_manager::createOrUpdate($name, $id, $logo, $link, $internal);
             break;
